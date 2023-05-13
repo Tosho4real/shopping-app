@@ -22,12 +22,12 @@ export class RecipeService {
   //     [new Ingredient('Buns', 2), new Ingredient('Meat', 1)]
   //   ),
   // ];
-  private recipes: Recipe[] = []
+  private recipes: Recipe[] = [];
   constructor(private slService: ShoppingListService) {}
 
-  setRecipe(recipes: Recipe[]){
+  setRecipe(recipes: Recipe[]) {
     this.recipes = recipes;
-    this.recipesChanged.next(this.recipes.slice())
+    this.recipesChanged.next(this.recipes.slice());
   }
 
   getRecipes() {
@@ -50,8 +50,8 @@ export class RecipeService {
     this.recipes[index] = newRecipe;
     this.recipesChanged.next(this.recipes.slice());
   }
-  deleteRecipe(index: number){
-    this.recipes.splice(index, 1)
+  deleteRecipe(index: number) {
+    this.recipes.splice(index, 1);
     this.recipesChanged.next(this.recipes.slice());
   }
 }

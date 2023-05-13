@@ -13,6 +13,10 @@ export class RecipeEditComponent implements OnInit {
   editMode = false;
   recipeForm: FormGroup;
 
+  get ingredientsControls() {
+    return (this.recipeForm.get('ingredients') as FormArray).controls;
+  }
+
   constructor(
     private route: ActivatedRoute,
     private recipeService: RecipeService,
@@ -36,9 +40,6 @@ export class RecipeEditComponent implements OnInit {
       this.recipeService.addRecipe(this.recipeForm.value);
     }
     this.onCancle();
-  }
-  getFormControls(control: string) {
-    return (this.recipeForm.get(control) as FormArray).controls;
   }
 
   onAddIngredient() {

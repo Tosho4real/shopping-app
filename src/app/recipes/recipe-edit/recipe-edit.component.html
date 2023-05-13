@@ -66,10 +66,7 @@
         <div class="col-xs-12" formArrayName="ingredients">
           <div
             class="row"
-            *ngFor="
-              let ingedientCtrl of getFormControls('ingredients');
-              let i = index
-            "
+            *ngFor="let ingedientCtrl of ingredientsControls; let i = index"
             style="margin-top: 10px"
             [formGroupName]="i"
           >
@@ -84,7 +81,13 @@
               />
             </div>
             <div class="col-xs-2">
-              <button type="button" class="btn btn-danger" (click)="onDeleteIngredient(i)">X</button>
+              <button
+                type="button"
+                class="btn btn-danger"
+                (click)="onDeleteIngredient(i)"
+              >
+                X
+              </button>
             </div>
           </div>
           <hr />

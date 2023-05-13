@@ -30,7 +30,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   onFetchData() {
     this.dataStorageService.fetchRecipe().subscribe();
   }
-  onLogOut(){
+  onLogOut() {
     this.authService.logOut();
   }
   ngOnDestroy(): void {
