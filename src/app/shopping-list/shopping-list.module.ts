@@ -6,7 +6,6 @@ import { FormsModule } from '@angular/forms';
 import { ShoppingListComponent } from './shopping-list.component';
 import { ShoppinEditComponent } from './shoppin-edit/shoppin-edit.component';
 import { SharedModule } from '../shared/shared.module';
-import { LoggingService } from '../logging.service';
 
 @NgModule({
   declarations: [ShoppingListComponent, ShoppinEditComponent],
