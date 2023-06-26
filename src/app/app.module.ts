@@ -8,6 +8,9 @@ import { AppRoutingModule } from './app-routing.module';
 import { HttpClientModule } from '@angular/common/http';
 import { CoreModule } from './core.module';
 import { LoggingService } from './logging.service';
+import { StoreModule } from '@ngrx/store';
+import * as fromApp from "./store/app.reducer";
+import { EffectsModule } from '@ngrx/effects';
 
 @NgModule({
   declarations: [AppComponent, HeaderComponent],
@@ -17,6 +20,8 @@ import { LoggingService } from './logging.service';
     HttpClientModule,
     SharedModule,
     CoreModule,
+    StoreModule.forRoot(fromApp.appReducer),
+    EffectsModule.forRoot([]),
   ],
   bootstrap: [AppComponent],
   // providers: [LoggingService],
