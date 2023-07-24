@@ -42,7 +42,9 @@ export class RecipeService {
 
   onAddIngredientsToShoppingList(ingredients: Ingredient[]) {
     // this.slService.addIngredients(ingredients);
-    this.store.dispatch(new ShoppingListActions.AddIngredients(ingredients));
+    this.store.dispatch(
+      ShoppingListActions.AddIngredients({ payload: ingredients })
+    );
   }
 
   addRecipe(recipe: Recipe) {

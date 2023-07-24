@@ -4,6 +4,8 @@ import { AuthService } from '../auth/auth.service';
 import { Subscription, map } from 'rxjs';
 import { Store } from '@ngrx/store';
 import * as fromApp from '../store/app.reducer';
+import * as authSelector from '../auth/store/auth.selectors';
+import * as AuthActions from '../auth/store/auth.actions';
 
 @Component({
   selector: 'app-header',
@@ -20,10 +22,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.userSub = this.store
-      .select('auth')
+      .select(authSelector.getUser)
       .pipe(
         map((authState) => {
-          return authState.user;
+          return authState;
         })
       )
       .subscribe((user) => {
@@ -40,7 +42,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.dataStorageService.fetchRecipe().subscribe();
   }
   onLogOut() {
-    this.authService.logOut();
+    this.store.dispatch(AuthActions.logout());
   }
   ngOnDestroy(): void {
     this.userSub.unsubscribe();

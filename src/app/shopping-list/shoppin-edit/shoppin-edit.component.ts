@@ -43,15 +43,17 @@ export class ShoppinEditComponent implements OnInit, OnDestroy {
     if (this.editMode) {
       // this.slService.updateIngredient(this.editedItemIndex, newIngredient);
       this.store.dispatch(
-        new ShoppingListActions.UpdateIngredient(newIngredient)
+        ShoppingListActions.updateIngredient({ payload: newIngredient })
       );
     } else {
       // this.slService.addIngredient(newIngredient);
-      this.store.dispatch(new ShoppingListActions.AddIngredient(newIngredient));
+      this.store.dispatch(
+        ShoppingListActions.AddIngredient({ payload: newIngredient })
+      );
     }
     this.slform.reset();
     this.editMode = false;
-    this.store.dispatch(new ShoppingListActions.StopEdit());
+    this.store.dispatch(ShoppingListActions.stopEdit());
   }
 
   onClear() {
@@ -60,13 +62,13 @@ export class ShoppinEditComponent implements OnInit, OnDestroy {
   }
   onDelete() {
     // this.slService.deleteIngredient(this.editedItemIndex);
-    this.store.dispatch(new ShoppingListActions.DeleteIngredient());
+    this.store.dispatch(ShoppingListActions.deleteIngredient());
     this.onClear();
   }
   ngOnDestroy(): void {
     if (this.subscription) {
       this.subscription.unsubscribe();
     }
-    this.store.dispatch(new ShoppingListActions.StopEdit());
+    this.store.dispatch(ShoppingListActions.stopEdit());
   }
 }
