@@ -33,6 +33,7 @@ const authReducerInternal = createReducer(
   }),
 
   on(AuthActions.logout, (state) => {
+
     return {
       ...state,
       user: null,

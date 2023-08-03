@@ -5,6 +5,8 @@ import { catchError, map, mergeMap, of, switchMap, tap } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { Router } from '@angular/router';
+import { User } from '../user.model';
+import { AuthService } from '../auth.service';
 
 export interface AuthResponseData {
   kind: string;
@@ -23,6 +25,8 @@ const handleAuthentication = (
   token: string
 ) => {
   const expirationDate = new Date(new Date().getTime() + +expiresIn * 1000);
+  const user = new User(email, userId, token, expirationDate);
+  localStorage.setItem('userData', JSON.stringify(user));
 
   return AuthActions.authenticateSuccess({
     payload: {
@@ -57,6 +61,13 @@ const handleLogin = () => {};
 
 @Injectable()
 export class AuthEffects {
+  constructor(
+    private actions$: Actions,
+    private http: HttpClient,
+    private router: Router,
+    private authService: AuthService
+  ) {}
+
   authSignup = createEffect(() => {
     return this.actions$.pipe(
       ofType(AuthActions.signupStart),
@@ -72,6 +83,9 @@ export class AuthEffects {
             }
           )
           .pipe(
+            tap((resData) => {
+              this.authService.setLogOutTimer(+resData.expiresIn * 1000);
+            }),
             map((resData) => {
               return handleAuthentication(
                 +resData.expiresIn,
@@ -103,6 +117,9 @@ export class AuthEffects {
             }
           )
           .pipe(
+            tap((resData) => {
+              this.authService.setLogOutTimer(+resData.expiresIn * 1000);
+            }),
             map((resData) => {
               return handleAuthentication(
                 +resData.expiresIn,
@@ -122,7 +139,7 @@ export class AuthEffects {
   authRedirect = createEffect(
     () => {
       return this.actions$.pipe(
-        ofType(AuthActions.authenticateSuccess, AuthActions.logout),
+        ofType(AuthActions.authenticateSuccess),
         tap(() => {
           this.router.navigate(['/']);
         })
@@ -130,6 +147,72 @@ export class AuthEffects {
     },
     { dispatch: false }
   );
+
+  autoLogout = createEffect(
+    () => {
+      return this.actions$.pipe(
+        ofType(AuthActions.logout),
+        tap(() => {
+          this.authService.clearLogout();
+          localStorage.removeItem('userData');
+          this.router.navigate(['/auth']);
+        })
+      );
+    },
+    { dispatch: false }
+  );
+
+  autoLogin = createEffect(() => {
+    return this.actions$.pipe(
+      ofType(AuthActions.autoLogin),
+      map(() => {
+        const userData: {
+          email: string;
+          id: string;
+          _token: string;
+          _tokenExpirationDate: string;
+        } = JSON.parse(localStorage.getItem('userData'));
+        if (!userData) {
+          return {
+            type: 'dummy',
+          };
+        }
+
+        const loadedUser = new User(
+          userData.email,
+          userData.id,
+          userData._token,
+          new Date(userData._tokenExpirationDate)
+        );
+
+        if (loadedUser.token) {
+          // this.user.next(loadedUser);
+          const expirationDuration =
+            new Date(userData._tokenExpirationDate).getTime() -
+            new Date().getTime();
+
+          this.authService.setLogOutTimer(expirationDuration);
+
+          return AuthActions.authenticateSuccess({
+            payload: {
+              email: loadedUser.email,
+              userId: loadedUser.id,
+              token: loadedUser.token,
+              expirationDate: new Date(userData._tokenExpirationDate),
+            },
+          });
+
+          // const expirationDuration =
+          //   new Date(userData._tokenExpirationDate).getTime() -
+          //   new Date().getTime();
+          // this.autoLogOut(expirationDuration);
+        }
+        return {
+          type: 'dummy',
+        };
+      })
+    );
+  });
 
   /**  authSuccess = createEffect(
     () => {
@@ -143,10 +226,4 @@ export class AuthEffects {
     { dispatch: false }
   );
   */
-
-  constructor(
-    private actions$: Actions,
-    private http: HttpClient,
-    private router: Router
-  ) {}
 }
