@@ -2,32 +2,58 @@ import {
   Component,
   ComponentFactoryResolver,
   OnDestroy,
+  OnInit,
   ViewChild,
 } from '@angular/core';
 import { NgForm } from '@angular/forms';
-import { AuthResponseData, AuthService } from './auth.service';
+import { AuthService } from './auth.service';
 import { Observable, Subscription } from 'rxjs';
 import { Router } from '@angular/router';
 import { AlertComponent } from '../shared/alert/alert.component';
 import { PlaceholderDirective } from '../shared/placeholder/placeholder.directive';
+import { Store } from '@ngrx/store';
+import * as fromApp from '../store/app.reducer';
+import * as AuthActions from './store/auth.actions';
+import * as AuthSelectors from './store/auth.selectors';
 
 @Component({
   selector: 'app-auth',
   templateUrl: './auth.component.html',
 })
-export class AuthComponent implements OnDestroy {
+export class AuthComponent implements OnInit, OnDestroy {
   isLoginMode = true;
   isLoading = false;
   error: string = null;
   @ViewChild(PlaceholderDirective, { static: false })
   alertHost: PlaceholderDirective;
-  closeSub: Subscription;
+  closeSub: Subscription = new Subscription();
 
   constructor(
     private authService: AuthService,
     private router: Router,
-    private componentFactoryResolver: ComponentFactoryResolver
+    private componentFactoryResolver: ComponentFactoryResolver,
+    private store: Store<fromApp.AppState>
   ) {}
+
+  ngOnInit(): void {
+    this.closeSub.add(
+      this.store
+        .select(AuthSelectors.getAuthLoading)
+        .subscribe((AuthLoading) => {
+          this.isLoading = AuthLoading;
+        })
+    );
+
+    this.closeSub.add(
+      this.store.select(AuthSelectors.getError).subscribe((error) => {
+        this.error = error;
+
+        if (this.error) {
+          this.showError(this.error);
+        }
+      })
+    );
+  }
   onSwitchMode() {
     this.isLoginMode = !this.isLoginMode;
   }
@@ -38,34 +64,41 @@ export class AuthComponent implements OnDestroy {
     const email = form.value.email;
     const password = form.value.password;
 
-    let authObs: Observable<AuthResponseData>;
-
     this.error = null;
-    this.isLoading = true;
+
     if (this.isLoginMode) {
-      authObs = this.authService.login(email, password);
+      // authObs = this.authService.login(email, password);
+      this.store.dispatch(
+        AuthActions.loginStart({
+          payload: { email: email, password: password },
+        })
+      );
     } else {
-      authObs = this.authService.signUp(email, password);
+      this.store.dispatch(
+        AuthActions.signupStart({
+          payload: { email: email, password: password },
+        })
+      );
     }
 
-    authObs.subscribe({
-      next: (resData) => {
-        console.log(resData);
-        this.isLoading = false;
-        this.router.navigate(['/recipes']);
-      },
-      error: (errorMessage) => {
-        console.log(errorMessage);
-        this.error = errorMessage;
-        this.showError(errorMessage);
-        this.isLoading = false;
-      },
-    });
+    // authObs.subscribe({
+    //   next: (resData) => {
+    //     console.log(resData);
+    //     this.isLoading = false;
+    //     this.router.navigate(['/recipes']);
+    //   },
+    //   error: (errorMessage) => {
+    //     console.log(errorMessage);
+    //     this.error = errorMessage;
+    //     this.showError(errorMessage);
+    //     this.isLoading = false;
+    //   },
+    // });
 
     form.reset();
   }
   onHandleError() {
-    this.error = null;
+    this.store.dispatch(AuthActions.clearError());
   }
 
   private showError(message: string) {
@@ -78,10 +111,12 @@ export class AuthComponent implements OnDestroy {
     const componentRef = hostViewContainer.createComponent(alertCmpFatory);
 
     componentRef.instance.message = message;
-    this.closeSub = componentRef.instance.close.subscribe(() => {
-      this.closeSub.unsubscribe();
-      hostViewContainer.clear();
-    });
+    this.closeSub.add(
+      componentRef.instance.close.subscribe(() => {
+        // this.closeSub.unsubscribe();
+        hostViewContainer.clear();
+      })
+    );
   }
   ngOnDestroy(): void {
     if (this.closeSub) {
